@@ -37,11 +37,12 @@ def init_db():
         );
 
         CREATE TABLE IF NOT EXISTS items (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            barcode     TEXT    UNIQUE NOT NULL,
-            name        TEXT    NOT NULL,
-            description TEXT    DEFAULT '',
-            created_at  TEXT    DEFAULT (datetime('now','localtime'))
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            barcode          TEXT    UNIQUE NOT NULL,
+            name             TEXT    NOT NULL,
+            description      TEXT    DEFAULT '',
+            max_borrow_days  INTEGER DEFAULT NULL,
+            created_at       TEXT    DEFAULT (datetime('now','localtime'))
         );
 
         CREATE TABLE IF NOT EXISTS borrow_records (
@@ -55,6 +56,14 @@ def init_db():
     """)
 
     conn.commit()
+
+    # Migration: เพิ่ม max_borrow_days ถ้า column ยังไม่มี (สำหรับ DB เก่า)
+    try:
+        conn.execute("ALTER TABLE items ADD COLUMN max_borrow_days INTEGER DEFAULT NULL")
+        conn.commit()
+    except Exception:
+        pass  # column มีอยู่แล้ว ไม่ต้องทำอะไร
+
     conn.close()
 
 
@@ -152,12 +161,12 @@ def update_user(user_id: int, name: str | None,
 # ─────────────────────────────────────────────
 #  Items
 # ─────────────────────────────────────────────
-def add_item(barcode: str, name: str, description: str = "") -> int:
+def add_item(barcode: str, name: str, description: str = "", max_borrow_days: int | None = None) -> int:
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO items (barcode, name, description) VALUES (?,?,?)",
-        (barcode, name, description),
+        "INSERT INTO items (barcode, name, description, max_borrow_days) VALUES (?,?,?,?)",
+        (barcode, name, description, max_borrow_days),
     )
     conn.commit()
     iid = cur.lastrowid
@@ -193,14 +202,18 @@ def delete_item(item_id: int):
         conn.close()
 
 
-def update_item(item_id: int, name: str | None, description: str | None):
-    """อัปเดตชื่อและคำอธิบายสิ่งของ"""
+def update_item(item_id: int, name: str | None, description: str | None, max_borrow_days: int | None = -1):
+    """อัปเดตชื่อ คำอธิบาย และจำนวนวันยืมสูงสุดของสิ่งของ
+    max_borrow_days=-1 หมายถึงไม่เปลี่ยนแปลงค่า, None หมายถึงลบข้อจำกัด
+    """
     conn = get_db()
     try:
         if name is not None:
             conn.execute("UPDATE items SET name=? WHERE id=?", (name, item_id))
         if description is not None:
             conn.execute("UPDATE items SET description=? WHERE id=?", (description, item_id))
+        if max_borrow_days != -1:  # -1 = sentinel ไม่เปลี่ยน
+            conn.execute("UPDATE items SET max_borrow_days=? WHERE id=?", (max_borrow_days, item_id))
         conn.commit()
     except Exception:
         conn.rollback()

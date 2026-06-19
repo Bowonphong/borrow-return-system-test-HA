@@ -505,17 +505,38 @@ canvas.activity-canvas{width:100%!important}
 .borrow-badge.borrowing{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3)}
 .borrow-badge.free{background:rgba(74,222,128,.1);color:var(--grn);border:1px solid rgba(74,222,128,.2)}
 
+/* max days presets */
+.max-days-presets{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.preset-btn{
+  padding:4px 8px;border-radius:6px;border:1px solid var(--bdr2);
+  background:var(--p2);color:var(--sub);font-size:11px;font-weight:600;
+  font-family:var(--mono);cursor:pointer;transition:all .15s;
+  display:inline-flex;align-items:center;gap:3px;
+}
+.preset-btn:hover{border-color:var(--acc);color:var(--acc);background:rgba(59,130,246,.08)}
+.preset-btn.preset-clear{border-color:rgba(239,68,68,.3);color:var(--dng)}
+.preset-btn.preset-clear:hover{border-color:var(--dng);background:rgba(239,68,68,.08)}
+/* max-days badge in table */
+.max-days-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;
+  background:rgba(59,130,246,.1);color:var(--acc);border:1px solid rgba(59,130,246,.25);
+  font-family:var(--mono);
+}
+.max-days-badge.none{background:transparent;color:var(--mut);border-color:transparent;font-weight:400;font-family:var(--font)}
+
+
 /* print size dropdown */
 .bc-print-size-wrap{position:relative}
 .bc-ps-dropdown{
   position:absolute;top:calc(100% + 6px);right:0;
   background:var(--panel);border:1px solid var(--bdr);
-  border-radius:10px;padding:6px;min-width:190px;z-index:200;
+  border-radius:10px;padding:6px;min-width:230px;z-index:200;
   box-shadow:0 8px 24px rgba(0,0,0,.3);
   display:none;flex-direction:column;gap:2px;
 }
 .bc-print-size-wrap.open .bc-ps-dropdown{display:flex}
-.bc-ps-option{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--txt);transition:background .12s}
+.bc-ps-option{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--txt);transition:background .12s;white-space:nowrap}
 .bc-ps-option:hover{background:rgba(59,130,246,.1)}
 .bc-ps-option.active{background:rgba(59,130,246,.15);color:var(--acc);font-weight:600}
 
@@ -763,9 +784,11 @@ canvas.activity-canvas{width:100%!important}
                 <th>Item Name</th>
                 <th>Barcode Number</th>
                 <th>Description</th>
+                <th>Max Days</th>
                 <th></th>
               </tr>
             </thead>
+
             <tbody id="items-table"></tbody>
           </table>
         </div>
@@ -787,17 +810,17 @@ canvas.activity-canvas{width:100%!important}
                   <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
                   <line x1="3" y1="18" x2="3.01" y2="18"/>
                 </svg>
-                <span id="bc-ps-label">Sort</span>
+                <span id="bc-ps-label">Medium — ~6×6 cm</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="bc-ps-arrow-icon">
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
               </button>
               <div class="bc-ps-dropdown" id="bc-ps-dropdown">
-                <div class="bc-ps-option" onclick="bcPsSelect(1,'1 per row')">Large (1 per row)</div>
-                <div class="bc-ps-option" onclick="bcPsSelect(2,'2 per row')">Large (2 per row)</div>
-                <div class="bc-ps-option active" id="bc-ps-opt-3" onclick="bcPsSelect(3,'3 per row')">Medium (3 per row)</div>
-                <div class="bc-ps-option" onclick="bcPsSelect(4,'4 per row')">Small (4 per row)</div>
-                <div class="bc-ps-option" onclick="bcPsSelect(5,'5 per row')">XS (5 per row)</div>
+                <div class="bc-ps-option" onclick="bcPsSelect(1,'Large — ~18×10 cm')">Large (1 per row) <span style="color:var(--acc);font-size:11px;margin-left:6px">~18×10 cm</span></div>
+                <div class="bc-ps-option" onclick="bcPsSelect(2,'Large — ~9×8 cm')">Large (2 per row) <span style="color:var(--acc);font-size:11px;margin-left:6px">~9×8 cm</span></div>
+                <div class="bc-ps-option active" id="bc-ps-opt-3" onclick="bcPsSelect(3,'Medium — ~6×6 cm')">Medium (3 per row) <span style="color:var(--acc);font-size:11px;margin-left:6px">~6×6 cm</span></div>
+                <div class="bc-ps-option" onclick="bcPsSelect(4,'Small — ~4.5×4.5 cm')">Small (4 per row) <span style="color:var(--acc);font-size:11px;margin-left:6px">~4.5×4.5 cm</span></div>
+                <div class="bc-ps-option" onclick="bcPsSelect(5,'XS — ~3.5×3.5 cm')">XS (5 per row) <span style="color:var(--acc);font-size:11px;margin-left:6px">~3.5×3.5 cm</span></div>
               </div>
               <select id="bc-print-size" style="display:none">
                 <option value="1">1</option><option value="2">2</option>
@@ -842,7 +865,7 @@ canvas.activity-canvas{width:100%!important}
 
 <!-- ══ ADD CUSTOM BARCODE MODAL ══ -->
 <div class="modal-overlay" id="add-custom-bc-modal" onclick="if(event.target===this)closeCustomBcModal()">
-  <div class="modal-card" style="max-width:440px">
+  <div class="modal-card" style="max-width:460px">
     <div class="modal-header">
       <div class="modal-title">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -870,7 +893,31 @@ canvas.activity-canvas{width:100%!important}
       </div>
       <div class="field" style="margin-bottom:14px">
         <label>ชื่อสิ่งของ</label>
-        <input type="text" id="custom-bc-name" placeholder="ชื่อที่จะแสดงบนป้ายกำกับ" onkeydown="if(event.key==='Enter')bcAddCustom()">
+        <input type="text" id="custom-bc-name" placeholder="ชื่อที่จะแสดงบนป้ายกำกับ" onkeydown="if(event.key==='Enter')document.getElementById('custom-bc-max-days').focus()">
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          จำนวนวันยืมสูงสุด
+          <span style="color:var(--mut);font-weight:400">(ไม่กำหนด = ไม่จำกัด)</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="custom-bc-max-days" placeholder="เช่น 7" min="1" max="365"
+            style="width:120px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:14px;padding:9px 13px;outline:none;transition:border-color .2s"
+            onkeydown="if(event.key==='Enter')bcAddCustom()"
+            onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bdr)'">
+          <span style="font-size:13px;color:var(--mut)">วัน</span>
+          <div class="max-days-presets">
+            <button class="preset-btn" onclick="document.getElementById('custom-bc-max-days').value=1">1ว</button>
+            <button class="preset-btn" onclick="document.getElementById('custom-bc-max-days').value=3">3ว</button>
+            <button class="preset-btn" onclick="document.getElementById('custom-bc-max-days').value=7">7ว</button>
+            <button class="preset-btn" onclick="document.getElementById('custom-bc-max-days').value=14">14ว</button>
+            <button class="preset-btn" onclick="document.getElementById('custom-bc-max-days').value=30">30ว</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--mut);margin-top:5px">ถ้ายืมเกินจำนวนวันที่กำหนด ระบบจะแสดงคำเตือน Overdue</div>
       </div>
       <button class="btn btn-primary" id="bc-custom-add-btn" style="width:100%;justify-content:center" onclick="bcAddCustom()">Add Barcode</button>
       <div id="bc-custom-add-result" class="result-banner" style="margin-top:12px"></div>
@@ -970,12 +1017,37 @@ canvas.activity-canvas{width:100%!important}
         <label>Item Name</label>
         <input type="text" id="new-item-name" placeholder="เช่น กล้อง DSLR Canon" onkeydown="if(event.key==='Enter')document.getElementById('new-item-desc').focus()">
       </div>
-      <div class="field" style="margin-bottom:20px">
+      <div class="field" style="margin-bottom:14px">
         <label>Description <span style="color:var(--mut);font-weight:400">(optional)</span></label>
-        <input type="text" id="new-item-desc" placeholder="รุ่น, สี, ฯลฯ" onkeydown="if(event.key==='Enter')addItem()">
+        <input type="text" id="new-item-desc" placeholder="รุ่น, สี, ฯลฯ" onkeydown="if(event.key==='Enter')document.getElementById('new-item-max-days').focus()">
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          จำนวนวันยืมสูงสุด
+          <span style="color:var(--mut);font-weight:400">(ไม่กำหนด = ไม่จำกัด)</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="new-item-max-days" placeholder="เช่น 7" min="1" max="365"
+            style="width:120px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:14px;padding:9px 13px;outline:none;transition:border-color .2s"
+            onkeydown="if(event.key==='Enter')addItem()"
+            onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bdr)'">
+          <span style="font-size:13px;color:var(--mut)">วัน</span>
+          <div class="max-days-presets">
+            <button class="preset-btn" onclick="document.getElementById('new-item-max-days').value=1">1ว</button>
+            <button class="preset-btn" onclick="document.getElementById('new-item-max-days').value=3">3ว</button>
+            <button class="preset-btn" onclick="document.getElementById('new-item-max-days').value=7">7ว</button>
+            <button class="preset-btn" onclick="document.getElementById('new-item-max-days').value=14">14ว</button>
+            <button class="preset-btn" onclick="document.getElementById('new-item-max-days').value=30">30ว</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--mut);margin-top:5px">ถ้ายืมเกินจำนวนวันที่กำหนด ระบบจะแสดงคำเตือน Overdue</div>
       </div>
       <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addItem()">Add Item</button>
       <div id="item-add-result" class="result-banner" style="margin-top:12px"></div>
+
     </div>
   </div>
 </div>
@@ -1076,12 +1148,40 @@ canvas.activity-canvas{width:100%!important}
         <label>Item Name</label>
         <input type="text" id="edit-item-name" placeholder="ชื่อสิ่งของ..." onkeydown="if(event.key==='Enter')document.getElementById('edit-item-desc').focus()">
       </div>
-      <div class="field" style="margin-bottom:24px">
+      <div class="field" style="margin-bottom:16px">
         <label>Description <span style="color:var(--mut);font-weight:400">(optional)</span></label>
-        <input type="text" id="edit-item-desc" placeholder="รุ่น, สี, ฯลฯ" onkeydown="if(event.key==='Enter')saveEditItem()">
+        <input type="text" id="edit-item-desc" placeholder="รุ่น, สี, ฯลฯ" onkeydown="if(event.key==='Enter')document.getElementById('edit-item-max-days').focus()">
+      </div>
+      <div class="field" style="margin-bottom:24px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          จำนวนวันยืมสูงสุด
+          <span style="color:var(--mut);font-weight:400">(ไม่กำหนด = ไม่จำกัด)</span>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="number" id="edit-item-max-days" placeholder="ไม่จำกัด" min="1" max="365"
+            style="width:120px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:14px;padding:9px 13px;outline:none;transition:border-color .2s"
+            onkeydown="if(event.key==='Enter')saveEditItem()"
+            onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bdr)'">
+          <span style="font-size:13px;color:var(--mut)">วัน</span>
+          <div class="max-days-presets">
+            <button class="preset-btn" onclick="document.getElementById('edit-item-max-days').value=1">1ว</button>
+            <button class="preset-btn" onclick="document.getElementById('edit-item-max-days').value=3">3ว</button>
+            <button class="preset-btn" onclick="document.getElementById('edit-item-max-days').value=7">7ว</button>
+            <button class="preset-btn" onclick="document.getElementById('edit-item-max-days').value=14">14ว</button>
+            <button class="preset-btn" onclick="document.getElementById('edit-item-max-days').value=30">30ว</button>
+            <button class="preset-btn preset-clear" onclick="document.getElementById('edit-item-max-days').value=''" title="ลบข้อจำกัด">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              ลบ
+            </button>
+          </div>
+        </div>
       </div>
       <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveEditItem()">Save Changes</button>
       <div id="edit-item-result" class="result-banner" style="margin-top:12px"></div>
+
     </div>
   </div>
 </div>
@@ -1543,20 +1643,25 @@ async function loadItems() {
     const badge=document.getElementById('item-count-badge');
     if(badge) badge.textContent=`${items.length} items`;
     const tbody=document.getElementById('items-table');
-    if(!items.length){tbody.innerHTML=`<tr><td colspan="4" class="empty-state">No items yet</td></tr>`;return;}
+    if(!items.length){tbody.innerHTML=`<tr><td colspan="5" class="empty-state">No items yet</td></tr>`;return;}
     tbody.innerHTML=items.map(it=>{
       const safeName=(it.name||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       const safeDesc=(it.description||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const mbd = it.max_borrow_days;
+      const mbdBadge = mbd
+        ? `<span class="max-days-badge">${mbd} วัน</span>`
+        : `<span class="max-days-badge none">—</span>`;
       return `<tr id="irow-${it.id}">
         <td class="it-name">${it.name}</td>
         <td class="it-bc">${it.barcode}</td>
         <td class="it-desc">${it.description||'—'}</td>
+        <td>${mbdBadge}</td>
         <td id="irow-actions-${it.id}">
           <div class="it-actions">
             <button class="icon-btn" onclick="openItemHistoryModal(${it.id},'${safeName}','${it.barcode}')" title="History">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </button>
-            <button class="icon-btn" onclick="openEditItemModal(${it.id},'${safeName}','${safeDesc}')" title="Edit">
+            <button class="icon-btn" onclick="openEditItemModal(${it.id},'${safeName}','${safeDesc}',${mbd||'null'})" title="Edit">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
             <button class="icon-btn danger" onclick="confirmDeleteItem(${it.id},'${safeName}')" title="Delete">
@@ -1582,13 +1687,19 @@ async function addItem(){
   const barcode=document.getElementById('new-item-barcode').value.trim();
   const name=document.getElementById('new-item-name').value.trim();
   const desc=document.getElementById('new-item-desc').value.trim();
+  const maxDaysVal=document.getElementById('new-item-max-days').value.trim();
+  const max_borrow_days=maxDaysVal ? parseInt(maxDaysVal,10) : null;
   if(!barcode||!name){showBanner('item-add-result','error','Please fill barcode and name');return;}
+  if(max_borrow_days !== null && (max_borrow_days < 1 || max_borrow_days > 365)){
+    showBanner('item-add-result','error','จำนวนวันต้องอยู่ระหว่าง 1-365');return;
+  }
   try{
-    const d=await api('POST','/api/items',{barcode,name,description:desc});
+    const d=await api('POST','/api/items',{barcode,name,description:desc,max_borrow_days});
     showBanner('item-add-result','success',d.message);
     document.getElementById('new-item-barcode').value='';
     document.getElementById('new-item-name').value='';
     document.getElementById('new-item-desc').value='';
+    document.getElementById('new-item-max-days').value='';
     loadItems(); if(activeTab==='barcode') loadBarcodes();
     setTimeout(()=>closeAddItemModal(),1800);
   } catch(e){showBanner('item-add-result','error',e.message);}
@@ -1597,6 +1708,7 @@ function openAddItemModal(){
   document.getElementById('new-item-barcode').value='';
   document.getElementById('new-item-name').value='';
   document.getElementById('new-item-desc').value='';
+  document.getElementById('new-item-max-days').value='';
   hideBanner('item-add-result');
   document.getElementById('add-item-modal').classList.add('show');
   setTimeout(()=>document.getElementById('new-item-barcode').focus(),100);
@@ -1604,10 +1716,11 @@ function openAddItemModal(){
 function closeAddItemModal(){document.getElementById('add-item-modal').classList.remove('show');}
 
 // ══ EDIT ITEM ══
-function openEditItemModal(id,name,desc){
+function openEditItemModal(id,name,desc,maxDays){
   document.getElementById('edit-item-id').value=id;
   document.getElementById('edit-item-name').value=name;
   document.getElementById('edit-item-desc').value=desc;
+  document.getElementById('edit-item-max-days').value=maxDays||'';
   hideBanner('edit-item-result');
   document.getElementById('edit-item-modal').classList.add('show');
   setTimeout(()=>document.getElementById('edit-item-name').focus(),100);
@@ -1617,10 +1730,15 @@ async function saveEditItem(){
   const id=parseInt(document.getElementById('edit-item-id').value);
   const name=document.getElementById('edit-item-name').value.trim();
   const desc=document.getElementById('edit-item-desc').value.trim();
+  const maxDaysVal=document.getElementById('edit-item-max-days').value.trim();
   if(!name){showBanner('edit-item-result','error','กรุณาใส่ชื่อ');return;}
+  // สร้าง payload: max_borrow_days ว่าง = clear_max_borrow_days, มีค่า = ตั้งค่า
+  const payload={name,description:desc};
+  if(maxDaysVal===''){ payload.clear_max_borrow_days=true; }
+  else{ payload.max_borrow_days=parseInt(maxDaysVal,10); }
   showBanner('edit-item-result','info','Saving...');
   try{
-    await api('PATCH',`/api/items/${id}`,{name,description:desc});
+    await api('PATCH',`/api/items/${id}`,payload);
     showBanner('edit-item-result','success','Updated');
     loadItems(); setTimeout(()=>closeEditItemModal(),1500);
   }catch(e){showBanner('edit-item-result','error',e.message);}
@@ -1942,7 +2060,7 @@ document.addEventListener('click',function(e){
 });
 
 function openCustomBcModal(){
-  ['custom-bc-code','custom-bc-name'].forEach(id=>document.getElementById(id).value='');
+  ['custom-bc-code','custom-bc-name','custom-bc-max-days'].forEach(id=>document.getElementById(id).value='');
   const r=document.getElementById('bc-custom-add-result');
   r.className='result-banner';r.textContent='';
   const btn=document.getElementById('bc-custom-add-btn');
@@ -1952,19 +2070,25 @@ function openCustomBcModal(){
 }
 function closeCustomBcModal(){document.getElementById('add-custom-bc-modal').classList.remove('show');}
 
+
 async function bcAddCustom(){
   const code=document.getElementById('custom-bc-code').value.trim();
   const name=document.getElementById('custom-bc-name').value.trim()||code;
+  const maxDaysVal=document.getElementById('custom-bc-max-days').value.trim();
+  const max_borrow_days=maxDaysVal ? parseInt(maxDaysVal,10) : null;
   if(!code){document.getElementById('custom-bc-code').focus();return;}
+  if(max_borrow_days !== null && (max_borrow_days < 1 || max_borrow_days > 365)){
+    showBanner('bc-custom-add-result','error','จำนวนวันต้องอยู่ระหว่าง 1-365');return;
+  }
   const btn=document.getElementById('bc-custom-add-btn');
   btn.disabled=true;btn.textContent='Adding...';
   try{
-    await api('POST','/api/items',{barcode:code,name,description:''});
+    await api('POST','/api/items',{barcode:code,name,description:'',max_borrow_days});
     btn.textContent='Added!';
-    showBanner('bc-custom-add-result','success',`Added "${name}"`);
+    showBanner('bc-custom-add-result','success',`Added "${name}"${max_borrow_days?' (ยืมได้ '+max_borrow_days+' วัน)':''}`);
     await loadBarcodes();
     if(activeTab==='items') loadItems();
-    setTimeout(()=>closeCustomBcModal(),1200);
+    setTimeout(()=>closeCustomBcModal(),1400);
   }catch(e){
     btn.textContent='Add Barcode';btn.disabled=false;
     showBanner('bc-custom-add-result','error',e.message||'Failed');

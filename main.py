@@ -32,11 +32,14 @@ class ItemCreate(BaseModel):
     barcode: str
     name: str
     description: str = ""
+    max_borrow_days: Optional[int] = None
 
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    max_borrow_days: Optional[int] = None
+    clear_max_borrow_days: bool = False  # True = ลบข้อจำกัดวันยืม
 
 
 class UserCreate(BaseModel):
@@ -70,6 +73,7 @@ class UserUpdate(BaseModel):
 class SmartScanRequest(BaseModel):
     user_id: int
     barcode: str
+    mode: str = "borrow"  # "borrow" | "return"
 
 
 # ─────────────────────────────────────────────────────────────
@@ -175,7 +179,12 @@ async def create_item(body: ItemCreate):
     if not body.barcode.strip() or not body.name.strip():
         raise HTTPException(status_code=400, detail="กรุณาใส่บาร์โค้ดและชื่อสิ่งของ")
     try:
-        iid = db.add_item(body.barcode.strip(), body.name.strip(), body.description.strip())
+        iid = db.add_item(
+            body.barcode.strip(),
+            body.name.strip(),
+            body.description.strip(),
+            body.max_borrow_days,
+        )
         return {"id": iid, "message": f"เพิ่ม '{body.name}' สำเร็จ"}
     except Exception:
         raise HTTPException(status_code=400, detail="บาร์โค้ดนี้มีอยู่ในระบบแล้ว")
@@ -189,13 +198,21 @@ async def delete_item(item_id: int):
 
 @app.patch("/api/items/{item_id}")
 async def update_item(item_id: int, body: ItemUpdate):
-    """อัปเดตชื่อและคำอธิบายสิ่งของ"""
+    """อัปเดตชื่อ คำอธิบาย และจำนวนวันยืมสูงสุดของสิ่งของ"""
     if body.name is not None and not body.name.strip():
         raise HTTPException(status_code=400, detail="ชื่อไม่ควรว่าง")
+    # คำนวณ max_borrow_days: -1 = ไม่เปลี่ยน, None = ลบ, int = ตั้งค่าใหม่
+    if body.clear_max_borrow_days:
+        mbd = None        # ลบข้อจำกัด
+    elif body.max_borrow_days is not None:
+        mbd = body.max_borrow_days  # ตั้งค่าใหม่
+    else:
+        mbd = -1          # sentinel: ไม่เปลี่ยน
     db.update_item(
         item_id,
         body.name.strip() if body.name is not None else None,
         body.description.strip() if body.description is not None else None,
+        mbd,
     )
     return {"message": "อัปเดตสำเร็จ"}
 
@@ -237,16 +254,30 @@ async def borrow(body: BorrowRequest, bg: BackgroundTasks):
 @app.post("/api/smart_scan")
 async def smart_scan(body: SmartScanRequest, bg: BackgroundTasks):
     """
-    สแกนอัจฉริยะ: ตรวจว่าผู้ใช้ยืมของชิ้นนี้อยู่หรือไม่
-    - ยืมอยู่ → คืนทันที
-    - ยังไม่เคยยืม → ยืมทันที
+    สแกนอัจฉริยะ: ตรวจ mode ก่อน แล้วค่อยทำ
+    - ถ้า mode ไม่ตรงกับสถานะจริง → return 409 โดยไม่แตะ DB
+    - ถ้าตรง → ยืม/คืน แล้ว return ผล
     """
     item = db.get_item_by_barcode(body.barcode)
     if not item:
         raise HTTPException(status_code=404, detail="ไม่พบบาร์โค้ดนี้ในระบบ")
 
-    # เช็คว่าผู้ใช้คนนี้ยืมของชิ้นนี้อยู่หรือไม่
+    # ── ตรวจสถานะจริงก่อน (ยังไม่ทำอะไร) ──
     user_record = db.check_user_borrowed_item(body.user_id, item["id"])
+    determined_action = "return" if user_record else "borrow"
+
+    # ── ถ้า mode ไม่ตรง → error ทันที ไม่แตะ DB ──
+    if determined_action != body.mode:
+        if body.mode == "borrow":
+            raise HTTPException(
+                status_code=409,
+                detail=f"สิ่งของนี้ถูกยืมอยู่แล้ว — หากต้องการคืน กลับไปเลือก \"คืนของ\""
+            )
+        else:
+            raise HTTPException(
+                status_code=409,
+                detail=f"คุณยังไม่ได้ยืมสิ่งของนี้ — หากต้องการยืม กลับไปเลือก \"ยืมของ\""
+            )
 
     if user_record:
         # ==== คืนของ ====
@@ -264,7 +295,6 @@ async def smart_scan(body: SmartScanRequest, bg: BackgroundTasks):
         }
     else:
         # ==== ยืมของ ====
-        # ตรวจว่าของชิ้นนี้ถูกคนอื่นยืมอยู่หรือไม่ (เฎพาะคนนี้เท่านั้นที่คืนได้)
         rid, msg = db.borrow_item(body.user_id, item["id"])
         if rid is None:
             raise HTTPException(status_code=400, detail=msg)

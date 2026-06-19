@@ -396,96 +396,144 @@
   /* ─────────────────────────────────────────
      CHECK OVERLAY
   ───────────────────────────────────────── */
+  /* ── Check Screen ── */
   .check-screen {
     position: fixed; inset: 0; z-index: 9997;
-    background: radial-gradient(ellipse at 50% 28%, #131d30 0%, #0b0e18 68%);
-    display: flex; flex-direction: column; align-items: center;
-    padding: 32px 20px 48px; overflow-y: auto;
+    background: var(--bg);
+    display: flex; flex-direction: column; overflow: hidden;
   }
   .check-screen.hidden { display: none; }
 
+  /* Topbar — same style as bi-topbar */
+  .check-topbar {
+    height: 56px; flex-shrink: 0;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; gap: 12px;
+  }
+  .check-topbar-left { display: flex; align-items: center; gap: 12px; }
   .check-back {
-    align-self: flex-start; background: transparent; border: none;
-    color: var(--muted); font-size: 14px; font-family: var(--font);
-    display: flex; align-items: center; gap: 6px; cursor: pointer;
-    transition: color .2s; margin-bottom: 36px; padding: 4px 0;
+    background: transparent; border: none;
+    color: var(--muted); font-size: 13px; font-family: var(--font);
+    display: flex; align-items: center; gap: 5px; cursor: pointer;
+    transition: color .2s; padding: 4px 0;
   }
   .check-back:hover { color: var(--cyan); }
-  .check-title { font-size: 34px; font-weight: 700; color: var(--text); margin-bottom: 8px; text-align: center; }
-  .check-sub   { font-size: 14px; color: var(--muted); margin-bottom: 32px; text-align: center; }
-
-  /* Check camera */
-  .check-cam-wrap {
-    position: relative; width: 100%; max-width: 460px;
-    border-radius: 16px; overflow: hidden; background: #000;
-    border: 2px solid var(--border2); transition: border-color .3s, box-shadow .3s;
-    aspect-ratio: 4/3;
+  .check-topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .check-topbar-badge {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 600; padding: 4px 12px;
+    border-radius: 20px; border: 1px solid rgba(34,211,238,.35);
+    color: var(--cyan); background: rgba(34,211,238,.08);
   }
-  .check-cam-wrap.detecting  { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 26px rgba(34,211,238,.18); }
-  .check-cam-wrap.recognized { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 34px rgba(34,211,238,.26); }
+
+  /* 2-column body grid — mirrors .bi-body */
+  .check-body {
+    flex: 1; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden;
+  }
+
+  /* Left panel — camera */
+  .check-left {
+    background: var(--bg2); border-right: 1px solid var(--border);
+    padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto;
+  }
+
+  /* Right panel — info */
+  .check-right {
+    background: var(--bg); padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+  }
+
+  /* Panel header */
+  .check-panel-hdr {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
+  .check-panel-icon {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--panel2); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Camera — reuse cam-wrap style */
+  .check-cam-wrap {
+    position: relative; border-radius: 14px; overflow: hidden;
+    background: #000; border: 2px solid var(--border2);
+    transition: border-color .3s, box-shadow .3s;
+    aspect-ratio: 4/3; width: 100%;
+  }
+  .check-cam-wrap.detecting  { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 24px rgba(34,211,238,.18); }
+  .check-cam-wrap.recognized { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 30px rgba(34,211,238,.28); }
   .check-cam-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); }
 
   .check-face-frame {
     position: absolute; inset: 0; pointer-events: none;
     display: flex; align-items: center; justify-content: center;
   }
-  .check-frame-inner { position: relative; width: 190px; height: 190px; }
+  .check-frame-inner { position: relative; width: 140px; height: 140px; }
   .check-frame-inner::before, .check-frame-inner::after,
   .check-frame-inner .ccb, .check-frame-inner .ccd {
     content: ''; position: absolute;
-    width: 30px; height: 30px; border-color: var(--cyan); border-style: solid;
+    width: 24px; height: 24px; border-color: var(--cyan); border-style: solid;
   }
   .check-frame-inner::before { top:0; left:0;  border-width: 3px 0 0 3px; }
   .check-frame-inner::after  { top:0; right:0; border-width: 3px 3px 0 0; }
   .check-frame-inner .ccb    { bottom:0; left:0;  border-width: 0 0 3px 3px; }
   .check-frame-inner .ccd    { bottom:0; right:0; border-width: 0 3px 3px 0; }
   .check-ring {
-    position: absolute; inset: 8px; border-radius: 50%;
+    position: absolute; inset: 6px; border-radius: 50%;
     border: 2px solid rgba(34,211,238,.6); transition: border-color .3s;
   }
-  .check-cam-wrap.recognized .check-ring { border-color: rgba(34,211,238,.9); }
+  .check-cam-wrap.recognized .check-ring { border-color: rgba(34,211,238,.95); }
 
-  /* Identified row under camera */
-  .check-id-row {
-    width: 100%; max-width: 460px; margin-top: 14px;
-    display: none; align-items: center; justify-content: space-between;
-    background: var(--panel2); border: 1px solid rgba(34,211,238,.28);
-    border-radius: 12px; padding: 12px 18px;
-  }
-  .check-id-row.show { display: flex; }
-  .check-id-name { font-size: 14px; font-weight: 600; color: var(--text); }
-  .check-id-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--cyan); }
-
-  /* Check wait bar */
+  /* Status text under camera */
   .check-wait {
-    width: 100%; max-width: 460px; margin-top: 12px;
     background: var(--panel2); border: 1px solid var(--border2);
-    border-radius: 10px; padding: 11px 16px;
+    border-radius: 10px; padding: 10px 14px;
     display: flex; align-items: center; gap: 10px;
     font-size: 13px; color: var(--muted);
   }
 
-  /* Check result card */
-  .check-result {
-    width: 100%; max-width: 460px; margin-top: 16px;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px 24px;
-    display: none; transition: border-color .3s;
+  /* Identity chip — mirrors borrow-identity */
+  .check-identity {
+    background: var(--panel2); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color .3s, box-shadow .3s;
   }
-  .check-result.show { display: block; }
+  .check-identity.found {
+    border-color: rgba(34,211,238,.45);
+    box-shadow: 0 0 0 1px rgba(34,211,238,.12);
+  }
+  .check-id-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--panel); border: 1.5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .check-id-name-text { font-size: 14px; font-weight: 600; color: var(--text); }
+  .check-id-sub  { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+
+  /* Result card */
+  .check-result {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+    display: none; transition: border-color .3s; flex: 1;
+  }
+  .check-result.show { display: flex; flex-direction: column; }
   .check-result.has-items { border-color: rgba(245,158,11,.35); }
   .check-result.no-items  { border-color: rgba(74,222,128,.28); }
   .cr-user-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
-  .cr-avatar { width: 44px; height: 44px; border-radius: 50%; background: rgba(34,211,238,.1); border: 2px solid rgba(34,211,238,.28); display: flex; align-items: center; justify-content: center; }
-  .cr-name { font-size: 16px; font-weight: 700; color: var(--cyan); }
+  .cr-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(34,211,238,.1); border: 2px solid rgba(34,211,238,.28); display: flex; align-items: center; justify-content: center; }
+  .cr-name { font-size: 15px; font-weight: 700; color: var(--cyan); }
   .cr-sub  { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
-  .cr-item-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(37,45,61,.5); }
+  .cr-items-scroll { flex: 1; overflow-y: auto; }
+  .cr-item-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(37,45,61,.5); }
   .cr-item-row:last-child { border-bottom: none; }
-  .cr-item-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--panel2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .cr-item-name  { font-size: 14px; font-weight: 500; flex: 1; }
+  .cr-item-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--panel2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cr-item-name  { font-size: 13px; font-weight: 500; flex: 1; }
   .cr-item-bc    { font-size: 11px; color: var(--muted); font-family: var(--mono); }
   .cr-item-since { font-size: 11px; margin-top: 2px; }
-  .cr-empty { text-align: center; padding: 20px 0; color: var(--green); font-size: 14px; font-weight: 500; }
+  .cr-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; color: var(--green); font-size: 14px; font-weight: 500; padding: 24px 0; }
 
   /* Responsive */
   @media (max-width: 720px) {
@@ -493,6 +541,8 @@
     .bi-left { border-right: none; border-bottom: 1px solid var(--border); }
     .bi-steps { display: none; }
     .home-card { width: 155px; padding: 26px 14px; }
+    .check-body { grid-template-columns: 1fr; }
+    .check-left { border-right: none; border-bottom: 1px solid var(--border); }
   }
 </style>
 </head>
@@ -534,7 +584,7 @@
         </svg>
       </div>
       <div class="home-card-label">ยืมของ</div>
-      <div class="home-card-desc">สแกนใบหน้า แล้วสแกนบาร์โค้ด<br>ไอ้เพื่อยืม</div>
+      <div class="home-card-desc">สแกนใบหน้า แล้วสแกนบาร์โค้ดเพื่อยืมของ</div>
     </div>
     <!-- Return -->
     <div class="home-card return" onclick="selectMode('return')">
@@ -547,7 +597,7 @@
         </svg>
       </div>
       <div class="home-card-label">คืนของ</div>
-      <div class="home-card-desc">สแกนใบหน้า แล้วสแกนบาร์โค้ด<br>ไอ้เพื่อคืน</div>
+      <div class="home-card-desc">สแกนใบหน้า แล้วสแกนบาร์โค้ดเพื่อคืนของ</div>
     </div>
   </div>
 
@@ -573,52 +623,97 @@
      CHECK SCREEN
 ════════════════════════════════════ -->
 <div class="check-screen hidden" id="check-screen">
-  <button class="check-back" onclick="closeCheckScreen()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-    กลับ
-  </button>
 
-  <div class="check-title">ตรวจสอบรายการยืม</div>
-  <div class="check-sub">สแกนใบหน้าเพื่อดูของที่ยืมอยู่</div>
+  <!-- Topbar -->
+  <div class="check-topbar">
+    <div class="check-topbar-left">
+      <button class="check-back" onclick="closeCheckScreen()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        กลับ
+      </button>
+      <span class="check-topbar-title">ตรวจสอบรายการยืม</span>
+    </div>
+    <div class="check-topbar-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+      </svg>
+      สแกนใบหน้า
+    </div>
+  </div>
 
-  <div class="check-cam-wrap detecting" id="check-cam-wrap">
-    <video id="check-video" autoplay muted playsinline></video>
-    <canvas id="check-canvas" style="display:none"></canvas>
-    <div class="check-face-frame">
-      <div class="check-frame-inner">
-        <div class="ccb"></div>
-        <div class="ccd"></div>
-        <div class="check-ring"></div>
+  <!-- 2-column body -->
+  <div class="check-body">
+
+    <!-- LEFT: Camera -->
+    <div class="check-left">
+      <div class="check-panel-hdr">
+        <div class="check-panel-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        Face Recognition
+      </div>
+
+      <div class="check-cam-wrap detecting" id="check-cam-wrap">
+        <video id="check-video" autoplay muted playsinline></video>
+        <canvas id="check-canvas" style="display:none"></canvas>
+        <div class="check-face-frame">
+          <div class="check-frame-inner">
+            <div class="ccb"></div>
+            <div class="ccd"></div>
+            <div class="check-ring"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Identity chip -->
+      <div class="check-identity" id="check-id-row">
+        <div class="check-id-avatar" id="check-id-avatar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div style="flex:1">
+          <div class="check-id-name-text" id="check-id-name">กำลังตรวจจับใบหน้า...</div>
+          <div class="check-id-sub" id="check-id-sub">รอสแกนใบหน้าผู้ใช้</div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="check-wait" id="check-wait-row">
+        <div class="sdot" id="check-sdot"></div>
+        <span id="check-status-text">กำลังสแกนใบหน้า...</span>
       </div>
     </div>
-  </div>
 
-  <!-- Identified row -->
-  <div class="check-id-row" id="check-id-row">
-    <div style="display:flex;align-items:center;gap:9px">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--cyan)">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg>
-      <span class="check-id-name" id="check-id-name">–</span>
+    <!-- RIGHT: Borrowed items -->
+    <div class="check-right">
+      <div class="check-panel-hdr">
+        <div class="check-panel-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>
+          </svg>
+        </div>
+        รายการยืม
+      </div>
+
+      <!-- Result card -->
+      <div class="check-result" id="check-result"></div>
+
+      <!-- Placeholder before scan -->
+      <div id="check-placeholder" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:13px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        สแกนใบหน้าเพื่อดูรายการยืม
+      </div>
     </div>
-    <div class="check-id-badge">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-      ยืนยันแล้ว
-    </div>
-  </div>
 
-  <!-- Wait status row -->
-  <div class="check-wait" id="check-wait-row">
-    <div class="sdot" id="check-sdot"></div>
-    <span id="check-status-text">กำลังสแกนใบหน้า...</span>
   </div>
-
-  <!-- Result card -->
-  <div class="check-result" id="check-result"></div>
 </div>
 
 <!-- ════════════════════════════════════
@@ -848,7 +943,7 @@ function hideBanner(id) { document.getElementById(id).className = 'rbanner'; }
 // ══════════════════════════════════════════════════
 //  Mode
 // ══════════════════════════════════════════════════
-function selectMode(mode) {
+async function selectMode(mode) {
   currentMode = mode;
   const isBorrow = mode === 'borrow';
 
@@ -876,11 +971,22 @@ function selectMode(mode) {
 
   scannedItems = [];
   renderItems();
-  startBorrowCamera();
   resetScanState();
   setBorrowStep(1);
   setStatusBox('waiting');
+
+  // request permission ครั้งแรก เพื่อให้ enumerateDevices ได้ label จริง
+  if (!cameraListPopulated) {
+    try {
+      const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      tmp.getTracks().forEach(t => t.stop());
+      await populateCameraList();
+    } catch(e) { console.warn('camera permission:', e); }
+  }
+
+  startBorrowCamera();
 }
+
 
 function changeMode() {
   stopBorrowCamera();
@@ -936,13 +1042,14 @@ function setStatusBox(state, msg) {
 function renderItems() {
   const list  = document.getElementById('items-list');
   const empty = document.getElementById('items-empty');
+  if (!list) return;
   if (scannedItems.length === 0) {
     list.innerHTML = '';
-    list.appendChild(empty);
-    empty.style.display = '';
+    // ใช้ display แทน appendChild เพื่อป้องกัน DOM detach bug
+    if (empty) empty.style.display = '';
     return;
   }
-  empty.style.display = 'none';
+  if (empty) empty.style.display = 'none';
   list.innerHTML = scannedItems.map(it => `
     <div class="item-row">
       <div style="width:30px;height:30px;border-radius:7px;background:var(--panel2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -962,12 +1069,14 @@ function renderItems() {
 // ══════════════════════════════════════════════════
 //  Camera
 // ══════════════════════════════════════════════════
+// เรียกครั้งเดียวตอน init เท่านั้น (ไม่เปิดกล้องชั่วคราว)
+let cameraListPopulated = false;
 async function populateCameraList() {
   try {
-    await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-      .then(s => s.getTracks().forEach(t => t.stop()));
+    // ใช้ enumerateDevices โดยตรงเพื่อไม่ต้องเปิด/ปิดกล้องชั่วคราว
     const devices = await navigator.mediaDevices.enumerateDevices();
     const cams = devices.filter(d => d.kind === 'videoinput');
+    if (!cams.length) return;
     const sel = document.getElementById('camera-select');
     sel.innerHTML = cams.map((c,i) => `<option value="${c.deviceId}">${c.label||'Camera '+(i+1)}</option>`).join('');
     const pref = cams.find(c =>
@@ -975,9 +1084,12 @@ async function populateCameraList() {
       c.label.toLowerCase().includes('hd pro') ||
       c.label.toLowerCase().includes('webcam')
     ) || cams[cams.length-1];
-    selectedCameraId = pref.deviceId;
-    sel.value = selectedCameraId;
+    if (!selectedCameraId) {
+      selectedCameraId = pref.deviceId;
+      sel.value = selectedCameraId;
+    }
     document.getElementById('cam-sel-row').style.display = cams.length <= 1 ? 'none' : '';
+    cameraListPopulated = true;
   } catch(e) { console.warn(e); }
 }
 async function switchCamera(deviceId) {
@@ -991,15 +1103,28 @@ async function switchCamera(deviceId) {
   } catch(e) { setScanStatus('Cannot open camera: ' + e.message, 'err'); }
 }
 async function startBorrowCamera() {
-  if (borrowStream) return;
-  setScanStatus('Opening camera...', 'scan');
+  // หยุด interval เก่าก่อนเสมอ
+  if (faceCheckInterval) { clearInterval(faceCheckInterval); faceCheckInterval = null; }
+  setScanStatus('เปิดกล้อง...', 'scan');
   try {
-    await populateCameraList();
+    // หยุด stream เก่าก่อนเสมอ
+    if (borrowStream) {
+      borrowStream.getTracks().forEach(t => t.stop());
+      borrowStream = null;
+    }
+    // รอ 300ms ให้ hardware release ก่อนเปิดใหม่ (แก้ black frame บน Windows Chrome)
+    await new Promise(r => setTimeout(r, 300));
+    // populate camera list ครั้งแรกเท่านั้น
+    if (!cameraListPopulated) await populateCameraList();
     const con = selectedCameraId
       ? { video: { deviceId: { exact: selectedCameraId }, width: 1280, height: 720 }, audio: false }
       : { video: { facingMode: 'user', width: 640, height: 480 }, audio: false };
     borrowStream = await navigator.mediaDevices.getUserMedia(con);
-    document.getElementById('borrow-video').srcObject = borrowStream;
+    const vid = document.getElementById('borrow-video');
+    vid.srcObject = borrowStream;
+    // รอให้ video เริ่ม play จริงก่อนเริ่ม detect
+    await new Promise(r => setTimeout(r, 200));
+    await vid.play().catch(() => {});
     setScanStatus('กำลังสแกนใบหน้า...', 'scan');
     document.getElementById('borrow-cam-wrap').classList.add('detecting');
     faceCheckInterval = setInterval(runFaceCheck, 2500);
@@ -1105,19 +1230,12 @@ async function onBarcodeEnter() {
   hideBanner('borrow-item-info'); hideBanner('borrow-final-result');
   setStatusBox('scanning', 'Checking barcode...');
   try {
-    const res = await api('POST', '/api/smart_scan', { user_id: borrowState.userId, barcode: bc });
-    const actualAction = res.action;
-    if (actualAction !== currentMode) {
-      const errMsg = currentMode === 'borrow'
-        ? 'สิ่งของนี้ถูกยืมอยู่แล้ว — หากต้องการคืน กลับไปเลือก "คืนของ"'
-        : 'คุณยังไม่ได้ยืมสิ่งของนี้ — หากต้องการยืม กลับไปเลือก "ยืมของ"';
-      showBanner('borrow-item-info', 'error', errMsg);
-      setStatusBox('error', errMsg);
-      document.getElementById('borrow-barcode').value = '';
-      document.getElementById('borrow-barcode').focus();
-      setTimeout(() => { hideBanner('borrow-item-info'); setStatusBox('ready'); }, 5000);
-      return;
-    }
+    // ส่ง mode ไปด้วย — backend จะ validate ก่อนทำทุกอย่าง
+    const res = await api('POST', '/api/smart_scan', {
+      user_id: borrowState.userId,
+      barcode: bc,
+      mode: currentMode
+    });
     const isBorrow = currentMode === 'borrow';
     const label = isBorrow ? 'ยืมสำเร็จ' : 'คืนสำเร็จ';
     const color = isBorrow ? 'success' : 'info';
@@ -1129,12 +1247,13 @@ async function onBarcodeEnter() {
     document.getElementById('borrow-barcode').value = '';
     showSuccessOverlay(isBorrow, res.item_name, borrowState.userName);
   } catch(e) {
+    // error จาก backend (รวม 409 mode mismatch) แสดงตรงๆ
     showBanner('borrow-item-info', 'error', e.message);
     setStatusBox('error', e.message);
     document.getElementById('borrow-barcode').value = '';
     document.getElementById('borrow-barcode').focus();
     setBorrowStep(2);
-    setTimeout(() => { hideBanner('borrow-item-info'); setStatusBox('ready'); }, 4000);
+    setTimeout(() => { hideBanner('borrow-item-info'); setStatusBox('ready'); }, 5000);
   }
 }
 
@@ -1186,7 +1305,9 @@ function hideSuccessOverlay() {
 function continueCurrentMode() {
   hideSuccessOverlay();
   hideBanner('borrow-item-info'); hideBanner('borrow-final-result');
-  faceLockedUserId = null; facePendingId = null; faceNoHitCount = 0;
+  // ไม่ล้าง scannedItems เพื่อให้รายการเดิมยังแสดงอยู่
+  // reset UI state (face scan + barcode)
+  faceLockedUserId = null; facePendingId = null; faceNoHitCount = 0; isRecognizing = false;
   borrowState = { userId: null, userName: null };
   const chip = document.getElementById('borrow-identity');
   if (chip) chip.classList.remove('found');
@@ -1199,7 +1320,11 @@ function continueCurrentMode() {
   const bc = document.getElementById('borrow-barcode');
   if (bc) { bc.disabled = true; bc.value = ''; }
   setBorrowStep(1); setScanStatus('กำลังสแกนใบหน้า...', 'scan'); setStatusBox('waiting');
+  // restart camera
+  stopBorrowCamera();
+  startBorrowCamera();
 }
+
 
 // ══════════════════════════════════════════════════
 //  CHECK SCREEN
@@ -1287,12 +1412,19 @@ async function runCheckFace() {
 }
 async function onCheckFaceRecognized(user) {
   checkLockedId = user.id;
-  setCheckStatus(`จดจำได้: ${user.name}`, 'recognized');
+  setCheckStatus(`จดจำได้: ${user.name} (${user.confidence}%)`, 'recognized');
+  // camera glow
   const wrap = document.getElementById('check-cam-wrap');
-  wrap.classList.remove('detecting'); wrap.classList.add('recognized');
-  // Show id row
-  document.getElementById('check-id-name').textContent = `พบใบหน้า ${user.name}`;
-  document.getElementById('check-id-row').classList.add('show');
+  if (wrap) { wrap.classList.remove('detecting'); wrap.classList.add('recognized'); }
+  // update identity chip
+  const chip = document.getElementById('check-id-row');
+  if (chip) chip.classList.add('found');
+  const nameEl = document.getElementById('check-id-name');
+  if (nameEl) nameEl.textContent = user.name;
+  const subEl = document.getElementById('check-id-sub');
+  if (subEl) subEl.textContent = `Confidence ${user.confidence}%  •  ID ${user.id}`;
+  const av = document.getElementById('check-id-avatar');
+  if (av) av.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
   try {
     const all = await api('GET', '/api/borrowed');
     const mine = all.filter(r => r.user_id === user.id);
@@ -1302,6 +1434,9 @@ async function onCheckFaceRecognized(user) {
   }
 }
 function renderCheckResult(user, items, errMsg) {
+  // ซ่อน placeholder
+  const ph = document.getElementById('check-placeholder');
+  if (ph) ph.style.display = 'none';
   const card = document.getElementById('check-result');
   card.classList.add('show');
   if (errMsg) {
@@ -1314,12 +1449,12 @@ function renderCheckResult(user, items, errMsg) {
     card.innerHTML = `
       <div class="cr-user-row">
         <div class="cr-avatar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div><div class="cr-name">${user.name}</div><div class="cr-sub">ID ${user.id}  •  ${user.confidence}%</div></div>
       </div>
-      <div class="cr-empty" style="display:flex;flex-direction:column;align-items:center;gap:8px">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <div class="cr-empty">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
         ไม่มีรายการยืมค้างอยู่
@@ -1334,24 +1469,26 @@ function renderCheckResult(user, items, errMsg) {
     card.innerHTML = `
       <div class="cr-user-row">
         <div class="cr-avatar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
         </div>
         <div><div class="cr-name">${user.name}</div><div class="cr-sub">ยืมของอยู่ ${items.length} ชิ้น  •  ID ${user.id}</div></div>
       </div>
-      ${items.map(it => `
-        <div class="cr-item-row">
-          <div class="cr-item-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-              <polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>
-            </svg>
-          </div>
-          <div style="flex:1">
-            <div class="cr-item-name">${it.item_name}</div>
-            <div class="cr-item-bc">${it.barcode}</div>
-            <div class="cr-item-since">${dayBadge(it.days_borrowed ?? 0)}  •  ยืมเมื่อ ${it.borrow_time}</div>
-          </div>
-        </div>`).join('')}`;
+      <div class="cr-items-scroll">
+        ${items.map(it => `
+          <div class="cr-item-row">
+            <div class="cr-item-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>
+              </svg>
+            </div>
+            <div style="flex:1">
+              <div class="cr-item-name">${it.item_name}</div>
+              <div class="cr-item-bc">${it.barcode}</div>
+              <div class="cr-item-since">${dayBadge(it.days_borrowed ?? 0)}  •  ยืมเมื่อ ${it.borrow_time}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
   }
 }
 function setCheckStatus(text, mode) {
@@ -1366,12 +1503,23 @@ function setCheckStatus(text, mode) {
 }
 function resetCheckState() {
   checkLockedId = null; checkPendingId = null; checkNoHitCount = 0;
+  // camera
   const wrap = document.getElementById('check-cam-wrap');
   if (wrap) { wrap.classList.remove('recognized'); wrap.classList.add('detecting'); }
-  const row = document.getElementById('check-id-row');
-  if (row) row.classList.remove('show');
+  // identity chip reset
+  const chip = document.getElementById('check-id-row');
+  if (chip) chip.classList.remove('found');
+  const nameEl = document.getElementById('check-id-name');
+  if (nameEl) nameEl.textContent = 'กำลังตรวจจับใบหน้า...';
+  const subEl = document.getElementById('check-id-sub');
+  if (subEl) subEl.textContent = 'รอสแกนใบหน้าผู้ใช้';
+  const av = document.getElementById('check-id-avatar');
+  if (av) av.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  // result card + placeholder
   const card = document.getElementById('check-result');
   if (card) { card.className = 'check-result'; card.innerHTML = ''; }
+  const ph = document.getElementById('check-placeholder');
+  if (ph) ph.style.display = '';
   setCheckStatus('กำลังสแกนใบหน้า...', 'scan');
 }
 </script>
