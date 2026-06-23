@@ -1,6 +1,6 @@
 name: "Borrow & Return System"
 description: "FastAPI backend for Borrow & Return System with face recognition"
-version: "1.0.1"
+version: "1.0.2"
 slug: "borrow_return_system"
 init: false
 arch:

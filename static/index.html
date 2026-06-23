@@ -485,6 +485,7 @@
     opacity: 0; transition: opacity .22s, transform .22s;
   }
   .toast.toast-return { border-color: rgba(34,211,238,.4); color: var(--cyan); box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(34,211,238,.15); }
+  .toast.toast-error  { border-color: rgba(239,68,68,.4); color: var(--danger); box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(239,68,68,.15); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   @keyframes cardPop { from{opacity:0;transform:scale(.88) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
@@ -946,19 +947,6 @@
           <button class="bc-btn" onclick="onBarcodeEnter()" id="scan-btn">Scan</button>
         </div>
 
-        <!-- Status box -->
-        <div class="status-box" id="bi-status-box">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="status-icon-svg" style="flex-shrink:0">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <span id="bi-status-text">Status: Waiting for face scan to complete.</span>
-        </div>
-
-        <!-- Banners -->
-        <div id="borrow-item-info"    class="rbanner"></div>
-        <div id="borrow-final-result" class="rbanner"></div>
-
         <!-- Scanned items -->
         <div class="items-label">Scanned Items</div>
         <div class="items-list" id="items-list">
@@ -975,7 +963,7 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
-      ยืนยัน
+      Confirm
     </button>
     <button class="btn-cancel" onclick="changeMode()">Cancel</button>
   </div>
@@ -1008,7 +996,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
-        ยืนยัน
+        Confirm
       </button>
     </div>
   </div>
@@ -1056,10 +1044,14 @@ const api = async (method, path, body) => {
 
 function showBanner(id, type, msg) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.className = `rbanner show ${type}`;
   el.innerHTML = msg;
 }
-function hideBanner(id) { document.getElementById(id).className = 'rbanner'; }
+function hideBanner(id) {
+  const el = document.getElementById(id);
+  if (el) el.className = 'rbanner';
+}
 
 // ══════════════════════════════════════════════════
 //  Mode
@@ -1143,6 +1135,7 @@ function setBorrowStep(n) {
 function setStatusBox(state, msg) {
   const box  = document.getElementById('bi-status-box');
   const text = document.getElementById('bi-status-text');
+  if (!box || !text) return; // element removed — safe exit
   box.className = 'status-box';
   if (state === 'waiting') {
     text.textContent = 'Status: Waiting for face scan to complete.';
@@ -1423,8 +1416,6 @@ function setScanStatus(text, mode) {
 async function onBarcodeEnter() {
   const bc = document.getElementById('borrow-barcode').value.trim();
   if (!bc || !borrowState.userId) return;
-  hideBanner('borrow-item-info'); hideBanner('borrow-final-result');
-  setStatusBox('scanning', 'Checking barcode...');
   try {
     // ส่ง mode ไปด้วย — backend จะ validate ก่อนทำทุกอย่าง
     const res = await api('POST', '/api/smart_scan', {
@@ -1433,12 +1424,8 @@ async function onBarcodeEnter() {
       mode: currentMode
     });
     const isBorrow = currentMode === 'borrow';
-    const label = isBorrow ? 'ยืมสำเร็จ' : 'คืนสำเร็จ';
-    const color = isBorrow ? 'success' : 'info';
+    const label = isBorrow ? 'Borrowed' : 'Returned';
     setBorrowStep(2);
-    showBanner('borrow-item-info', color, `${label} — "${res.item_name}"`);
-    setTimeout(() => hideBanner('borrow-item-info'), 4000);
-    setStatusBox('ready', `${label}: ${res.item_name}`);
     scannedItems.push({
       name:          res.item_name,
       barcode:       bc,
@@ -1451,12 +1438,10 @@ async function onBarcodeEnter() {
     document.getElementById('borrow-barcode').focus();
   } catch(e) {
     // error จาก backend (รวม 409 mode mismatch) แสดงตรงๆ
-    showBanner('borrow-item-info', 'error', e.message);
-    setStatusBox('error', e.message);
+    showToast('Error: ' + e.message, 'error');
     document.getElementById('borrow-barcode').value = '';
     document.getElementById('borrow-barcode').focus();
     setBorrowStep(2);
-    setTimeout(() => { hideBanner('borrow-item-info'); setStatusBox('ready'); }, 5000);
   }
 }
 
@@ -1501,20 +1486,18 @@ function openConfirmOverlay() {
   const listEl = document.getElementById('confirm-items-list');
   listEl.innerHTML = scannedItems.map((it, i) => {
     const dateThai = formatThaiDate(it.borrowTime || new Date().toISOString());
-    const dueTags  = isBorrow
-      ? buildDueDateChips(it.borrowTime || new Date().toISOString(), it.maxBorrowDays, 'confirm-date-chip')
-      : '';
+    const dueTags  = buildDueDateChips(it.borrowTime || new Date().toISOString(), it.maxBorrowDays, 'confirm-date-chip');
+    const dateLabel = isBorrow ? 'ยืมวันที่' : 'ยืมมาตั้งแต่';
     return `
     <div class="confirm-item">
       <div class="confirm-item-num${isBorrow ? '' : ' return-num'}">${i+1}</div>
       <div style="flex:1">
         <div class="confirm-item-name">${it.name}</div>
         <div class="confirm-item-bc">${it.barcode}</div>
-        ${isBorrow ? `
         <div class="confirm-item-date-row">
-          <span class="confirm-date-chip">ยืมวันที่ ${dateThai}</span>
+          <span class="confirm-date-chip">${dateLabel} ${dateThai}</span>
           ${dueTags}
-        </div>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -1540,12 +1523,16 @@ function showToast(msg, type = 'borrow') {
   if (!el || !span) return;
   if (_toastTimer) clearTimeout(_toastTimer);
   span.textContent = msg;
-  el.className = 'toast' + (type === 'return' ? ' toast-return' : '');
+  let cls = 'toast';
+  if (type === 'return') cls += ' toast-return';
+  else if (type === 'error') cls += ' toast-error';
+  el.className = cls;
   // slight delay so transition fires
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { el.classList.add('show'); });
   });
-  _toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2200);
+  const dur = type === 'error' ? 3500 : 2200;
+  _toastTimer = setTimeout(() => { el.classList.remove('show'); }, dur);
 }
 
 

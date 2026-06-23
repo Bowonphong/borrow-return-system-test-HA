@@ -281,6 +281,20 @@ async def smart_scan(body: SmartScanRequest, bg: BackgroundTasks):
 
     if user_record:
         # ==== คืนของ ====
+        # ดึง borrow_time และ max_borrow_days ก่อน do_return (ยังมีข้อมูลอยู่)
+        import database as _db
+        conn = _db.get_db()
+        rec = conn.execute(
+            """SELECT br.borrow_time, i.max_borrow_days
+               FROM borrow_records br
+               JOIN items i ON br.item_id = i.id
+               WHERE br.id = ?""",
+            (user_record["id"],)
+        ).fetchone()
+        conn.close()
+        borrow_time_ret    = rec["borrow_time"]    if rec else None
+        max_borrow_days_ret = rec["max_borrow_days"] if rec else None
+
         db.do_return(user_record["id"])
         total = len(db.get_currently_borrowed())
         users = db.get_all_users()
@@ -288,10 +302,12 @@ async def smart_scan(body: SmartScanRequest, bg: BackgroundTasks):
         user_name = u["name"] if u else str(body.user_id)
         bg.add_task(ha.notify_return, user_name, item["name"], total)
         return {
-            "action":  "return",
-            "success": True,
-            "message": f"คืน '{item['name']}' สำเร็จ",
-            "item_name": item["name"],
+            "action":          "return",
+            "success":         True,
+            "message":         f"คืน '{item['name']}' สำเร็จ",
+            "item_name":       item["name"],
+            "borrow_time":     borrow_time_ret,
+            "max_borrow_days": max_borrow_days_ret,
         }
     else:
         # ==== ยืมของ ====
