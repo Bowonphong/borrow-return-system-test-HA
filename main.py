@@ -303,11 +303,22 @@ async def smart_scan(body: SmartScanRequest, bg: BackgroundTasks):
         u = next((x for x in users if x["id"] == body.user_id), None)
         if u:
             bg.add_task(ha.notify_borrow, u["name"], item["name"], len(borrowed))
+        # ดึง borrow_time จริงจาก record ที่เพิ่งสร้าง
+        import sqlite3 as _sl
+        import database as _db
+        conn = _db.get_db()
+        rec = conn.execute(
+            "SELECT borrow_time FROM borrow_records WHERE id=?", (rid,)
+        ).fetchone()
+        conn.close()
+        borrow_time = rec["borrow_time"] if rec else None
         return {
-            "action":  "borrow",
-            "success": True,
-            "message": f"ยืม '{item['name']}' สำเร็จ",
-            "item_name": item["name"],
+            "action":          "borrow",
+            "success":         True,
+            "message":         f"ยืม '{item['name']}' สำเร็จ",
+            "item_name":       item["name"],
+            "borrow_time":     borrow_time,
+            "max_borrow_days": item.get("max_borrow_days"),
         }
 
 

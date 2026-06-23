@@ -328,19 +328,37 @@
   /* Scanned items */
   .items-label { font-size: 13px; font-weight: 600; color: var(--text); }
   .items-list {
-    flex: 1; min-height: 72px; max-height: 260px;
+    flex: 1; min-height: 72px; max-height: 300px;
     background: var(--panel2); border: 1px solid var(--border2);
     border-radius: 10px; padding: 14px; overflow-y: auto;
     display: flex; flex-direction: column; gap: 8px;
   }
   .items-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 12px 0; }
   .item-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px; background: var(--panel);
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; background: var(--panel);
     border: 1px solid var(--border); border-radius: 8px;
   }
-  .item-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .item-row-icon {
+    width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; margin-top: 2px;
+    background: var(--panel2); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .item-row-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .item-name { font-size: 13px; font-weight: 500; }
   .item-bc   { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .item-date-row {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 2px;
+  }
+  .item-date-chip {
+    font-size: 10px; padding: 2px 7px; border-radius: 5px;
+    background: var(--panel2); border: 1px solid var(--border2); color: var(--muted);
+    font-family: var(--mono);
+  }
+  .item-due-ok   { border-color: rgba(74,222,128,.3); color: var(--green); background: rgba(74,222,128,.06); }
+  .item-due-warn { border-color: rgba(245,158,11,.35); color: var(--warn); background: rgba(245,158,11,.06); }
+  .item-due-urgent { border-color: rgba(239,68,68,.35); color: var(--danger); background: rgba(239,68,68,.07); }
+  .item-no-limit { border-color: var(--border2); color: var(--muted); }
 
   /* Footer */
   .bi-footer {
@@ -420,6 +438,17 @@
   }
   .confirm-item-name { font-size: 13px; font-weight: 500; flex: 1; }
   .confirm-item-bc   { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .confirm-item-date-row {
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: 4px;
+  }
+  .confirm-date-chip {
+    font-size: 10px; padding: 2px 7px; border-radius: 5px;
+    background: var(--panel); border: 1px solid var(--border2); color: var(--muted);
+    font-family: var(--mono);
+  }
+  .cdc-ok     { border-color: rgba(74,222,128,.3); color: var(--green); background: rgba(74,222,128,.06); }
+  .cdc-warn   { border-color: rgba(245,158,11,.35); color: var(--warn); background: rgba(245,158,11,.06); }
+  .cdc-urgent { border-color: rgba(239,68,68,.35); color: var(--danger); background: rgba(239,68,68,.07); }
   .confirm-card-footer {
     padding: 18px 28px;
     border-top: 1px solid var(--border);
@@ -443,6 +472,20 @@
   .return-flash { animation: rFlash 1.5s ease-out; }
   .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.12); border-top-color:currentColor; border-radius:50%; animation:spin .7s linear infinite; display:inline-block; flex-shrink:0; }
   @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* Toast notification */
+  .toast {
+    position: fixed; top: 72px; left: 50%; transform: translateX(-50%) translateY(-12px);
+    z-index: 11000; pointer-events: none;
+    background: var(--panel); border: 1px solid rgba(74,222,128,.4);
+    border-radius: 12px; padding: 11px 22px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 600; color: var(--green);
+    box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(74,222,128,.15);
+    opacity: 0; transition: opacity .22s, transform .22s;
+  }
+  .toast.toast-return { border-color: rgba(34,211,238,.4); color: var(--cyan); box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(34,211,238,.15); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   @keyframes cardPop { from{opacity:0;transform:scale(.88) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
@@ -973,6 +1016,14 @@
 
 
 
+<!-- Toast notification -->
+<div class="toast" id="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="toast-text"></span>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════
 //  State
@@ -1109,31 +1160,86 @@ function setStatusBox(state, msg) {
 // ══════════════════════════════════════════════════
 //  Items list
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+//  Date helpers
+// ══════════════════════════════════════════════════
+function formatThaiDate(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function buildDueDateChips(borrowTime, maxBorrowDays, chipClass) {
+  // chipClass = 'item-date-chip' for items-list, 'confirm-date-chip' for confirm overlay
+  if (!maxBorrowDays) {
+    return `<span class="${chipClass} item-no-limit">ไม่จำกัดวันคืน</span>`;
+  }
+  const borrowDate = new Date(borrowTime);
+  const dueDate = new Date(borrowDate);
+  dueDate.setDate(dueDate.getDate() + maxBorrowDays);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+  const diffMs = dueDate - today;
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  const dueDateThai = dueDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+  const isConfirm = chipClass.startsWith('confirm');
+  const okClass   = isConfirm ? 'cdc-ok'   : 'item-due-ok';
+  const warnClass = isConfirm ? 'cdc-warn'  : 'item-due-warn';
+  const urgClass  = isConfirm ? 'cdc-urgent': 'item-due-urgent';
+
+  let dueLabel, dueClass;
+  if (daysLeft <= 0) {
+    dueLabel = `คืนวันนี้!`; dueClass = urgClass;
+  } else if (daysLeft === 1) {
+    dueLabel = `คืนวันนี้`; dueClass = urgClass;
+  } else if (daysLeft <= 3) {
+    dueLabel = `อีก ${daysLeft} วัน`; dueClass = warnClass;
+  } else {
+    dueLabel = `อีก ${daysLeft} วัน`; dueClass = okClass;
+  }
+  return [
+    `<span class="${chipClass}">ยืมได้ ${maxBorrowDays} วัน</span>`,
+    `<span class="${chipClass}">คืนก่อน ${dueDateThai}</span>`,
+    `<span class="${chipClass} ${dueClass}">${dueLabel}</span>`,
+  ].join('');
+}
+
 function renderItems() {
   const list  = document.getElementById('items-list');
   const empty = document.getElementById('items-empty');
   if (!list) return;
   if (scannedItems.length === 0) {
     list.innerHTML = '';
-    // ใช้ display แทน appendChild เพื่อป้องกัน DOM detach bug
     if (empty) empty.style.display = '';
     return;
   }
   if (empty) empty.style.display = 'none';
-  list.innerHTML = scannedItems.map(it => `
+  const borrowDateThai = formatThaiDate(scannedItems[0]?.borrowTime || new Date().toISOString());
+  list.innerHTML = scannedItems.map(it => {
+    const dateThai = formatThaiDate(it.borrowTime);
+    const dueTags  = buildDueDateChips(it.borrowTime || new Date().toISOString(), it.maxBorrowDays, 'item-date-chip');
+    return `
     <div class="item-row">
-      <div style="width:30px;height:30px;border-radius:7px;background:var(--panel2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <div class="item-row-icon">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
           <polyline points="3.29 7 12 12 20.71 7"/>
           <line x1="12" y1="22" x2="12" y2="12"/>
         </svg>
       </div>
-      <div style="flex:1">
+      <div class="item-row-body">
         <div class="item-name">${it.name}</div>
         <div class="item-bc">${it.barcode}</div>
+        <div class="item-date-row">
+          <span class="item-date-chip">ยืมวันที่ ${dateThai}</span>
+          ${dueTags}
+        </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════
@@ -1331,9 +1437,16 @@ async function onBarcodeEnter() {
     const color = isBorrow ? 'success' : 'info';
     setBorrowStep(2);
     showBanner('borrow-item-info', color, `${label} — "${res.item_name}"`);
+    setTimeout(() => hideBanner('borrow-item-info'), 4000);
     setStatusBox('ready', `${label}: ${res.item_name}`);
-    scannedItems.push({ name: res.item_name, barcode: bc });
+    scannedItems.push({
+      name:          res.item_name,
+      barcode:       bc,
+      borrowTime:    res.borrow_time    || new Date().toISOString(),
+      maxBorrowDays: res.max_borrow_days ?? null,
+    });
     renderItems();
+    showToast(label + ' — ' + res.item_name, isBorrow ? 'borrow' : 'return');
     document.getElementById('borrow-barcode').value = '';
     document.getElementById('borrow-barcode').focus();
   } catch(e) {
@@ -1386,14 +1499,25 @@ function openConfirmOverlay() {
   document.getElementById('confirm-items-label').textContent = isBorrow ? 'รายการของที่ยืม' : 'รายการของที่คืน';
   // Items
   const listEl = document.getElementById('confirm-items-list');
-  listEl.innerHTML = scannedItems.map((it, i) => `
+  listEl.innerHTML = scannedItems.map((it, i) => {
+    const dateThai = formatThaiDate(it.borrowTime || new Date().toISOString());
+    const dueTags  = isBorrow
+      ? buildDueDateChips(it.borrowTime || new Date().toISOString(), it.maxBorrowDays, 'confirm-date-chip')
+      : '';
+    return `
     <div class="confirm-item">
       <div class="confirm-item-num${isBorrow ? '' : ' return-num'}">${i+1}</div>
       <div style="flex:1">
         <div class="confirm-item-name">${it.name}</div>
         <div class="confirm-item-bc">${it.barcode}</div>
+        ${isBorrow ? `
+        <div class="confirm-item-date-row">
+          <span class="confirm-date-chip">ยืมวันที่ ${dateThai}</span>
+          ${dueTags}
+        </div>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   // OK button
   const okBtn = document.getElementById('confirm-ok-btn');
   okBtn.className = 'confirm-ok-btn ' + (isBorrow ? 'borrow' : 'return');
@@ -1404,6 +1528,24 @@ function finalConfirm() {
   document.getElementById('confirm-overlay').classList.remove('show');
   // Go back to home immediately
   changeMode();
+}
+
+// ══════════════════════════════════════════════════
+//  Toast
+// ══════════════════════════════════════════════════
+let _toastTimer = null;
+function showToast(msg, type = 'borrow') {
+  const el = document.getElementById('toast');
+  const span = document.getElementById('toast-text');
+  if (!el || !span) return;
+  if (_toastTimer) clearTimeout(_toastTimer);
+  span.textContent = msg;
+  el.className = 'toast' + (type === 'return' ? ' toast-return' : '');
+  // slight delay so transition fires
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { el.classList.add('show'); });
+  });
+  _toastTimer = setTimeout(() => { el.classList.remove('show'); }, 2200);
 }
 
 
