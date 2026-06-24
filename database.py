@@ -374,7 +374,8 @@ def get_currently_borrowed() -> list[dict]:
     rows = conn.execute(
         """
         SELECT br.id, br.user_id, u.name AS user_name,
-               i.name AS item_name, i.barcode, br.borrow_time,
+               i.name AS item_name, i.barcode, i.max_borrow_days,
+               br.borrow_time,
                CAST(JULIANDAY('now') - JULIANDAY(br.borrow_time) AS INTEGER) AS days_borrowed
         FROM borrow_records br
         JOIN users u ON br.user_id = u.id

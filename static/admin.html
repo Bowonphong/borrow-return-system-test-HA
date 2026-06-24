@@ -1892,6 +1892,49 @@ async function doDeleteRecord(recordId){
 function closeItemHistoryModal(){document.getElementById('item-history-modal').classList.remove('show');}
 
 // ══ USER BORROW MODAL ══
+function adminFormatDate(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function adminDueChips(borrowTime, maxBorrowDays) {
+  const chip = (text, col, bg, bdr) =>
+    `<span style="font-size:10px;padding:2px 8px;border-radius:5px;background:${bg};border:1px solid ${bdr};color:${col};font-family:var(--mono);white-space:nowrap">${text}</span>`;
+
+  const borrowDateStr = adminFormatDate(borrowTime);
+  const chips = [ chip(`ยืมวันที่ ${borrowDateStr}`, 'var(--sub)', 'transparent', 'var(--bdr)') ];
+
+  if (!maxBorrowDays) {
+    chips.push(chip('ไม่จำกัดวันคืน', 'var(--mut)', 'transparent', 'var(--bdr)'));
+    return chips.join('');
+  }
+
+  const due = new Date(borrowTime);
+  due.setDate(due.getDate() + maxBorrowDays);
+  const today = new Date(); today.setHours(0,0,0,0);
+  due.setHours(0,0,0,0);
+  const daysLeft = Math.ceil((due - today) / 86400000);
+  const dueDateStr = adminFormatDate(due.toISOString());
+
+  chips.push(chip(`ยืมได้ ${maxBorrowDays} วัน`, 'var(--sub)', 'transparent', 'var(--bdr)'));
+  chips.push(chip(`คืนก่อน ${dueDateStr}`, 'var(--sub)', 'transparent', 'var(--bdr)'));
+
+  let dueLabel, dueCol, dueBg, dueBdr;
+  if (daysLeft <= 0) {
+    dueLabel = 'คืนวันนี้!'; dueCol='var(--dng)'; dueBg='rgba(239,68,68,.08)'; dueBdr='rgba(239,68,68,.35)';
+  } else if (daysLeft === 1) {
+    dueLabel = 'คืนวันนี้';  dueCol='var(--dng)'; dueBg='rgba(239,68,68,.08)'; dueBdr='rgba(239,68,68,.35)';
+  } else if (daysLeft <= 3) {
+    dueLabel = `อีก ${daysLeft} วัน`; dueCol='var(--warn)'; dueBg='rgba(245,158,11,.08)'; dueBdr='rgba(245,158,11,.35)';
+  } else {
+    dueLabel = `อีก ${daysLeft} วัน`; dueCol='var(--grn)'; dueBg='rgba(74,222,128,.06)'; dueBdr='rgba(74,222,128,.3)';
+  }
+  chips.push(chip(dueLabel, dueCol, dueBg, dueBdr));
+  return chips.join('');
+}
+
 async function openUserBorrowModal(userId,name,fname){
   const img=document.getElementById('ubm-face');
   const fallback=document.getElementById('ubm-fallback');
@@ -1907,13 +1950,21 @@ async function openUserBorrowModal(userId,name,fname){
       document.getElementById('ubm-body').innerHTML='<div style="text-align:center;padding:32px;color:var(--grn)">No borrowed items</div>';
       return;
     }
-    document.getElementById('ubm-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:8px">${userItems.map(item=>{
+    document.getElementById('ubm-body').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">${userItems.map(item=>{
       const days=item.days_borrowed??0;
-      const col=days===0?'var(--grn)':days<7?'#fb923c':'var(--dng)';
-      const bg=days===0?'rgba(74,222,128,.06)':days<7?'rgba(251,146,60,.06)':'rgba(239,68,68,.06)';
-      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:${bg};border-radius:10px;border:1px solid ${col}22">
-        <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${item.item_name}</div><div style="font-size:11px;color:var(--mut);font-family:var(--mono);margin-top:2px">${item.barcode}</div></div>
-        <div style="text-align:right;flex-shrink:0"><div style="font-size:18px;font-weight:800;color:${col}">${days===0?'Today':`${days}d`}</div></div>
+      const mbd=item.max_borrow_days??null;
+      let borderCol='rgba(74,222,128,.22)'; let bgCol='rgba(74,222,128,.04)';
+      if(mbd){
+        const due=new Date(item.borrow_time); due.setDate(due.getDate()+mbd);
+        const today=new Date(); today.setHours(0,0,0,0); due.setHours(0,0,0,0);
+        const dl=Math.ceil((due-today)/86400000);
+        if(dl<=0){borderCol='rgba(239,68,68,.35)';bgCol='rgba(239,68,68,.06)';}
+        else if(dl<=3){borderCol='rgba(245,158,11,.35)';bgCol='rgba(245,158,11,.06)';}
+      }
+      return `<div style="padding:12px 16px;background:${bgCol};border-radius:10px;border:1px solid ${borderCol}">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">${item.item_name}</div>
+        <div style="font-size:11px;color:var(--mut);font-family:var(--mono);margin-bottom:8px">${item.barcode}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${adminDueChips(item.borrow_time, mbd)}</div>
       </div>`;
     }).join('')}</div>`;
   }catch(e){document.getElementById('ubm-body').innerHTML=`<div style="color:var(--dng);text-align:center;padding:24px">Failed: ${e.message}</div>`;}
